@@ -49,14 +49,25 @@ export const handlers = [
   // ----------------------------------------
   http.post("/api/auth/login", async ({ request }) => {
     const body = await request.json() as any
-    if (body.email && body.password) {
-      const user = dbEmployees.find(e => e.email === body.email) || dbEmployees[0]
-      addAuditLog("login", user.firstName + " " + user.lastName)
-      return HttpResponse.json({
-        token: "mock-jwt-token",
-        user,
-      })
+    
+    // The universal mock password is "Admin@123"
+    if (body.password !== "Admin@123") {
+      return new HttpResponse("Unauthorized", { status: 401 })
     }
+
+    if (body.email) {
+      // Find the exact user by email (no fallback)
+      const user = dbEmployees.find(e => e.email === body.email)
+      
+      if (user) {
+        addAuditLog("login", user.firstName + " " + user.lastName)
+        return HttpResponse.json({
+          token: "mock-jwt-token",
+          user,
+        })
+      }
+    }
+    
     return new HttpResponse("Unauthorized", { status: 401 })
   }),
 
