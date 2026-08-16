@@ -3,6 +3,7 @@
 import * as React from "react"
 import { CheckSquare, Clock, Filter, Plus, User, Calendar, MoreHorizontal, Trash2, Edit2, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
+import { useAuthStore } from "@/stores/authStore"
 
 import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
@@ -22,13 +23,23 @@ type Task = {
 export default function TasksPage() {
   const [tasks, setTasks] = React.useState<Task[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const { user } = useAuthStore()
+
+  const isStandardEmployee = user?.roleId === "role_3"
 
   const fetchTasks = async () => {
     try {
       const res = await fetch("/api/tasks")
       if (!res.ok) throw new Error("Failed")
       const data = await res.json()
-      setTasks(data)
+      
+      // RBAC: Standard Employees only see their own tasks
+      if (isStandardEmployee) {
+        const fullName = `${user.firstName} ${user.lastName}`
+        setTasks(data.filter((t: Task) => t.assignee === fullName))
+      } else {
+        setTasks(data)
+      }
     } catch (e) {
       toast.error("Failed to fetch tasks")
     } finally {
@@ -82,10 +93,12 @@ export default function TasksPage() {
             <Filter className="mr-2 h-4 w-4" />
             Filters
           </Button>
-          <Button onClick={() => toast.info("Create Task modal coming soon!")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Task
-          </Button>
+          {!isStandardEmployee && (
+            <Button onClick={() => toast.info("Create Task modal coming soon!")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Task
+            </Button>
+          )}
         </div>
       </div>
 
@@ -177,9 +190,11 @@ export default function TasksPage() {
                         <DropdownMenuItem onClick={() => updateStatus(task.id, "Done")}>Mark as Done</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => toast.info("Edit modal coming soon")}><Edit2 className="w-4 h-4 mr-2"/> Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive focus:bg-destructive focus:text-destructive-foreground" onClick={() => deleteTask(task.id)}>
-                          <Trash2 className="w-4 h-4 mr-2"/> Delete Task
-                        </DropdownMenuItem>
+                        {!isStandardEmployee && (
+                          <DropdownMenuItem className="text-destructive focus:bg-destructive focus:text-destructive-foreground" onClick={() => deleteTask(task.id)}>
+                            <Trash2 className="w-4 h-4 mr-2"/> Delete Task
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

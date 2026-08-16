@@ -38,7 +38,14 @@ export default function LeavePage() {
       const res = await fetch("/api/leave-requests")
       if (!res.ok) throw new Error("Failed to fetch")
       const data = await res.json()
-      setRequests(data)
+      
+      // RBAC: Standard Employees can only see their own leave requests
+      if (user?.roleId === "role_3") {
+        const fullName = `${user.firstName} ${user.lastName}`
+        setRequests(data.filter((r: LeaveRequest) => r.employeeName === fullName))
+      } else {
+        setRequests(data)
+      }
     } catch (error) {
       console.error(error)
       toast.error("Failed to load leave requests")

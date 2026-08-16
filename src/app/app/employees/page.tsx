@@ -171,6 +171,23 @@ export default function EmployeesPage() {
                           View Profile
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toast.info("Edit Assignment coming soon")}>Edit Assignment</DropdownMenuItem>
+                        {user?.roleId === "role_1" && employee.roleId !== "role_1" && (
+                          <DropdownMenuItem 
+                            className="text-emerald-600 focus:bg-emerald-500/10 focus:text-emerald-600 font-medium"
+                            onClick={async () => {
+                              const tid = toast.loading("Promoting user...")
+                              try {
+                                await fetch(`/api/employees/${employee.id}/promote`, { method: "PUT" })
+                                setEmployees(prev => prev.map(e => e.id === employee.id ? { ...e, roleId: "role_1" } : e))
+                                toast.success("User promoted to Super Admin!", { id: tid })
+                              } catch (e) {
+                                toast.error("Failed to promote user", { id: tid })
+                              }
+                            }}
+                          >
+                            Promote to Admin
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           className="text-destructive focus:bg-destructive focus:text-destructive-foreground"

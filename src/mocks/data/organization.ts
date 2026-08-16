@@ -19,20 +19,29 @@ export const mockRoles: Role[] = [
     name: "Super Admin",
     description: "Unrestricted access to the entire organization",
     isSystem: true,
-    permissions: ["*.*.*"]
+    permissions: ["*.*.*"],
+    status: "Active",
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z"
   },
   {
     id: "role_2",
     name: "Department Head",
     description: "Can manage all teams and employees within their department",
     isSystem: true,
-    permissions: ["employees.view.department", "attendance.view.department", "reports.review.department"]
+    permissions: ["employees.view.department", "attendance.view.department", "reports.review.department"],
+    status: "Active",
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z"
   },
   {
     id: "role_3",
     name: "Standard Employee",
     description: "Default role for all new employees",
     isSystem: true,
-    permissions: ["employees.view.own", "attendance.view.own", "reports.submit.own"]
+    permissions: ["employees.view.own", "attendance.view.own", "reports.submit.own"],
+    status: "Active",
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z"
   }
 ]

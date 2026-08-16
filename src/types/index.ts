@@ -64,6 +64,22 @@ export interface Role {
   description: string
   isSystem: boolean // System roles cannot be deleted
   permissions: string[] // Array of Permission IDs
+  status: "Active" | "Inactive"
+  userCount?: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PermissionModule {
+  id: string
+  title: string
+  iconName: string
+  description: string
+  permissions: {
+    id: string
+    label: string
+    desc: string
+  }[]
 }
 
 // ==========================================

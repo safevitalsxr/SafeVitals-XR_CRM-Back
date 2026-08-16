@@ -1,7 +1,8 @@
-import { http, HttpResponse } from "msw"
+import { http, HttpResponse, delay } from "msw"
 import { mockEmployees } from "./data/employees"
 import { mockDepartments, mockTeams, mockRoles } from "./data/organization"
 import { mockAuditLogs } from "./data/audit"
+import { mockPermissions } from "./data/permissions"
 
 const dbEmployees = [...mockEmployees]
 const dbDepartments = [...mockDepartments]
@@ -10,23 +11,15 @@ const dbRoles = [...mockRoles]
 const dbAuditLogs = [...mockAuditLogs]
 
 // We will also maintain state for access requests since they were hardcoded in UI
-const dbAccessRequests = [
-  { id: "ar_1", employeeId: "EMP-00125", employeeName: "Amit Patel", requestedRole: "Department Head", reason: "Taking over Engineering lead", dateSubmitted: "Today", status: "Pending" },
-  { id: "ar_2", employeeId: "EMP-00126", employeeName: "Sarah Jenkins", requestedRole: "Super Admin", reason: "Need access to system config", dateSubmitted: "Yesterday", status: "Pending" },
-  { id: "ar_3", employeeId: "EMP-00124", employeeName: "Ram Kumar", requestedRole: "Standard Employee", reason: "New hire onboarding.", dateSubmitted: "Aug 12", status: "Approved" }
-]
+const dbAccessRequests: any[] = []
 
-const dbLeaveRequests = [
-  { id: "lr_1", employeeName: "Neha Gupta", type: "Annual Leave", duration: "3 Days", dates: "Aug 20 - Aug 22", reason: "Family vacation to Kerala", status: "Pending", submittedAt: "Today" },
-  { id: "lr_2", employeeName: "Ram Kumar", type: "Sick Leave", duration: "1 Day", dates: "Aug 16", reason: "Fever and cold", status: "Pending", submittedAt: "Yesterday" },
-  { id: "lr_3", employeeName: "Arjun Patel", type: "Parental Leave", duration: "14 Days", dates: "Sep 01 - Sep 14", reason: "Newborn baby care", status: "Approved", submittedAt: "Aug 10" },
-  { id: "lr_4", employeeName: "Priya Sharma", type: "Unpaid Leave", duration: "2 Days", dates: "Aug 10 - Aug 11", reason: "Personal errands", status: "Rejected", submittedAt: "Aug 05" }
-]
+const dbLeaveRequests: any[] = []
 
-const dbTasks = [
-  { id: "task_1", title: "Setup new employee workstation", assignee: "Amit Patel", dueDate: "Today", priority: "High", status: "In Progress" },
-  { id: "task_2", title: "Monthly security review", assignee: "Ram Kumar", dueDate: "Aug 20", priority: "Medium", status: "To Do" },
-  { id: "task_3", title: "Update payroll records", assignee: "HR Team", dueDate: "Aug 15", priority: "High", status: "Done" },
+const dbTasks: any[] = []
+
+const dbReports: any[] = [
+  { id: "rep_1", employeeName: "Ram Kumar", week: "Aug 10 - Aug 16", submittedAt: "Yesterday, 05:30 PM", hours: 40, status: "Approved" },
+  { id: "rep_2", employeeName: "Neha Gupta", week: "Aug 10 - Aug 16", submittedAt: "Today, 09:00 AM", hours: 42.5, status: "Pending" }
 ]
 
 const addAuditLog = (action: string, actor: string, targetId?: string, targetName?: string) => {
@@ -102,6 +95,16 @@ export const handlers = [
     if (idx !== -1) {
       dbEmployees[idx].status = "Suspended"
       addAuditLog("employee.suspend", "Admin", dbEmployees[idx].id, dbEmployees[idx].firstName)
+      return HttpResponse.json(dbEmployees[idx])
+    }
+    return new HttpResponse("Not found", { status: 404 })
+  }),
+
+  http.put("/api/employees/:id/promote", ({ params }) => {
+    const idx = dbEmployees.findIndex((e) => e.id === params.id)
+    if (idx !== -1) {
+      dbEmployees[idx].roleId = "role_1" // Promote to Super Admin
+      addAuditLog("employee.promote", "Admin", dbEmployees[idx].id, dbEmployees[idx].firstName)
       return HttpResponse.json(dbEmployees[idx])
     }
     return new HttpResponse("Not found", { status: 404 })
@@ -188,11 +191,144 @@ export const handlers = [
   }),
 
   // ----------------------------------------
+  // REPORTS
+  // ----------------------------------------
+  http.get("/api/reports", () => {
+    return HttpResponse.json(dbReports)
+  }),
+  http.get("/api/reports/stats", () => {
+    return HttpResponse.json({
+      pending: dbReports.filter(r => r.status === "Pending").length,
+      approved: dbReports.filter(r => r.status === "Approved").length,
+      missing: 0,
+      archived: 1204
+    })
+  }),
+
+  // ----------------------------------------
   // ORGANIZATION & RBAC
   // ----------------------------------------
-  http.get("/api/departments", () => HttpResponse.json(dbDepartments)),
-  http.get("/api/teams", () => HttpResponse.json(dbTeams)),
-  http.get("/api/roles", () => HttpResponse.json(dbRoles)),
+  http.get("/api/departments", async () => {
+    await delay(300)
+    return HttpResponse.json(dbDepartments)
+  }),
+  http.get("/api/teams", async () => {
+    await delay(300)
+    return HttpResponse.json(dbTeams)
+  }),
+  
+  // PERMISSIONS
+  http.get("/api/permissions", async () => {
+    await delay(200)
+    return HttpResponse.json(mockPermissions)
+  }),
+
+  // ROLES CRUD
+  http.get("/api/roles", async () => {
+    await delay(400)
+    // calculate userCount dynamically
+    const rolesWithCounts = dbRoles.map(role => ({
+      ...role,
+      userCount: dbEmployees.filter(e => e.roleId === role.id).length
+    }))
+    return HttpResponse.json(rolesWithCounts)
+  }),
+
+  http.post("/api/roles", async ({ request }) => {
+    await delay(600)
+    const body = await request.json() as any
+    
+    // Validation
+    if (!body.name) {
+      return HttpResponse.json({ error: "Role name is required" }, { status: 400 })
+    }
+    if (dbRoles.some(r => r.name.toLowerCase() === body.name.toLowerCase())) {
+      return HttpResponse.json({ error: "A role with this name already exists" }, { status: 400 })
+    }
+
+    const newRole = {
+      id: `role_custom_${Date.now()}`,
+      name: body.name,
+      description: body.description || "",
+      isSystem: false,
+      permissions: body.permissions || [],
+      status: body.status || "Active",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    dbRoles.push(newRole)
+    addAuditLog("role.create", "Admin", newRole.id, newRole.name)
+    return HttpResponse.json({ ...newRole, userCount: 0 })
+  }),
+
+  http.put("/api/roles/:id", async ({ params, request }) => {
+    await delay(500)
+    const body = await request.json() as any
+    const idx = dbRoles.findIndex(r => r.id === params.id)
+    
+    if (idx === -1) return new HttpResponse("Not found", { status: 404 })
+
+    // If it's a system role, we shouldn't allow changing name or status, only permissions (if even that)
+    // Actually, system roles might be completely locked down or just let them edit permissions.
+    // The UI currently allows saving configuration (permissions) for system roles? Wait, the prompt says "Do not modify system roles".
+    if (dbRoles[idx].isSystem && (body.name !== dbRoles[idx].name || body.status !== dbRoles[idx].status)) {
+       return HttpResponse.json({ error: "Cannot modify system role properties" }, { status: 403 })
+    }
+
+    dbRoles[idx] = {
+      ...dbRoles[idx],
+      name: body.name || dbRoles[idx].name,
+      description: body.description ?? dbRoles[idx].description,
+      permissions: body.permissions || dbRoles[idx].permissions,
+      status: body.status || dbRoles[idx].status,
+      updatedAt: new Date().toISOString()
+    }
+
+    addAuditLog("role.update", "Admin", dbRoles[idx].id, dbRoles[idx].name)
+    return HttpResponse.json({ 
+      ...dbRoles[idx], 
+      userCount: dbEmployees.filter(e => e.roleId === dbRoles[idx].id).length 
+    })
+  }),
+
+  http.delete("/api/roles/:id", async ({ params }) => {
+    await delay(500)
+    const idx = dbRoles.findIndex(r => r.id === params.id)
+    if (idx === -1) return new HttpResponse("Not found", { status: 404 })
+    
+    if (dbRoles[idx].isSystem) {
+      return HttpResponse.json({ error: "Cannot delete system roles" }, { status: 403 })
+    }
+
+    // Check if users are still assigned
+    if (dbEmployees.some(e => e.roleId === params.id)) {
+      return HttpResponse.json({ error: "Cannot delete role that has active users assigned to it" }, { status: 400 })
+    }
+
+    const deletedRole = dbRoles.splice(idx, 1)[0]
+    addAuditLog("role.delete", "Admin", deletedRole.id, deletedRole.name)
+    return HttpResponse.json({ success: true })
+  }),
+
+  http.put("/api/roles/:id/duplicate", async ({ params }) => {
+    await delay(400)
+    const role = dbRoles.find(r => r.id === params.id)
+    if (!role) return new HttpResponse("Not found", { status: 404 })
+
+    const newRole = {
+      id: `role_custom_${Date.now()}`,
+      name: `${role.name} (Copy)`,
+      description: role.description,
+      isSystem: false,
+      permissions: [...role.permissions],
+      status: "Active" as const,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    dbRoles.push(newRole)
+    addAuditLog("role.duplicate", "Admin", newRole.id, newRole.name)
+    return HttpResponse.json({ ...newRole, userCount: 0 })
+  }),
 
   // ----------------------------------------
   // SUPER ADMIN & AUDIT

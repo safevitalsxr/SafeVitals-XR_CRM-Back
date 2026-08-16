@@ -74,7 +74,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="text-2xl font-bold text-emerald-600">Punched In</div>
               <p className="text-xs text-muted-foreground mt-1">
-                Since 09:00 AM Today
+                Since {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} Today
               </p>
               <div className="mt-4 flex gap-2">
                 <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Take Break</Button>
