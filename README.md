@@ -1,37 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SafeVitals XR - Frontend Web Application
 
-## Getting Started
+<div align="center">
+  <h3>The modern command center for managing our entire workforce, keeping everyone safe, aligned, and productive.</h3>
+</div>
 
-First, run the development server:
+---
 
+## 📖 Overview
+
+**SafeVitals XR** is an enterprise-grade Workforce and Employee Management dashboard built with modern web technologies. This frontend application provides seamless integration with the SafeVitals backend CRM to manage employees, access requests, ticketing, attendance, schedules, and spatial computing (XR) settings.
+
+The login experience features a fully interactive, professional 3D VR Headset model rendered using WebGL, establishing the cutting-edge aesthetic of the platform.
+
+## ✨ Key Features
+
+- **Immersive 3D Experience:** Interactive, physics-based 3D VR headset on the login screen using `@react-three/fiber`.
+- **Advanced Dashboard UI:** Sleek, modern, and highly responsive glassmorphic dashboard built on Tailwind CSS and `shadcn/ui`.
+- **Employee Management:** Complete CRUD operations, lifecycle controls (Suspend/Hard Delete), and real-time contact updates.
+- **Role-Based Access Control:** Strict permission scopes for System Administrators, Managers, and standard employees.
+- **Mock Service Worker Integration:** Fully functional mock API layer utilizing MSW for rapid frontend development without backend dependencies.
+
+## 🚀 Technology Stack
+
+- **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
+- **Language:** TypeScript
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **UI Components:** [shadcn/ui](https://ui.shadcn.com/) (Radix Primitives)
+- **State Management:** [Zustand](https://github.com/pmndrs/zustand)
+- **3D Rendering:** [Three.js](https://threejs.org/) & [@react-three/fiber](https://docs.pmnd.rs/react-three-fiber/)
+- **API Mocking:** [MSW (Mock Service Worker)](https://mswjs.io/)
+
+## 🛠️ Getting Started
+
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) (v18+) and npm installed.
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/safevitalsxr/SafeVitals-XR_CRM-Back.git
+cd SafeVitals-XR_CRM-Back
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Learn More
+## 📦 Build for Production
 
-To learn more about Next.js, take a look at the following resources:
+To generate an optimized production build:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+npm run start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🔒 Security & Code Quality
 
-## Deploy on Vercel
+- **ESLint & Prettier** are integrated for enforcing code quality.
+- **Strict TypeScript** configuration ensures type safety across the entire application.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# SafeVitals-XR_CRM-Back
+---
+*Property of Safe Vitals Inc. All Rights Reserved.*
